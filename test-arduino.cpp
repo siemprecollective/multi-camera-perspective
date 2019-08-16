@@ -20,8 +20,8 @@
 #define TRANSLATION_MIN 1.0/3
 #define TRANSLATION_MAX 2.0/3
 
-#define ROTATION_MIN 1.0/4
-#define ROTATION_MAX 3.0/4
+#define ROTATION_MIN 1.0/3
+#define ROTATION_MAX 2.0/3
 
 // {"BOOSTING", "MIL", "KCF", "TLD","MEDIANFLOW", "GOTURN", "MOSSE", "CSRT"};
 
@@ -58,9 +58,9 @@ struct EyeCam {
 };
 
 uint8_t ratio_to_control_byte(double ratio) {
-    int out = int(ratio * 128);
-    if (out >= 127) {
-        return uint8_t(127);
+    int out = int(ratio * 84);
+    if (out >= 84) {
+        return uint8_t(84);
     }
     if (out < 0) {
         return uint8_t(0);
@@ -70,23 +70,32 @@ uint8_t ratio_to_control_byte(double ratio) {
 
 uint8_t map_to_translation(double ratio) {
     ratio = ((ratio) - TRANSLATION_MIN) / (TRANSLATION_MAX - TRANSLATION_MIN);
-    return ratio_to_control_byte(ratio);
+    return uint8_t(85+ratio_to_control_byte(ratio));
 }
 
-uint8_t map_to_rotation(double ratio) {
-    ratio = ((ratio) - TRANSLATION_MIN) / (TRANSLATION_MAX - TRANSLATION_MIN);
-    /*
+uint8_t map_to_rotation_x(double ratio) {
+    //ratio = ((ratio) - TRANSLATION_MIN) / (TRANSLATION_MAX - TRANSLATION_MIN);
     if (ratio < ROTATION_MIN) {
         ratio = ROTATION_MIN;
     } else if (ratio > ROTATION_MAX) {
         ratio = ROTATION_MAX;
     }
-    */
+    /*
     auto translated = (ratio - 0.5) * TRANSLATION_TRAVEL;
     auto angle = atan(translated/FOCAL_LENGTH);
     ratio = (angle + M_PI/2) / M_PI;
-    std::cout << ratio << std::endl;
-    return uint8_t(128+ratio_to_control_byte(ratio));
+    */
+    //std::cout << ratio << std::endl;
+    return uint8_t(ratio_to_control_byte(ratio));
+}
+
+uint8_t map_to_rotation_y(double ratio) {
+    if (ratio < ROTATION_MIN) {
+        ratio = ROTATION_MIN;
+    } else if (ratio > ROTATION_MAX) {
+        ratio = ROTATION_MAX;
+    }
+    return uint8_t(169+ratio_to_control_byte(ratio));
 }
 
 int i = 0;
@@ -126,7 +135,7 @@ int main(int argc, char **argv)
     namedWindow("tracking");
     moveWindow("tracking", 0, PS3_EYE_HEIGHT);
 
-    int fd = serialport_init("/dev/cu.usbmodem14101", 9600);
+    int fd = serialport_init(argv[1], 9600);
     serialport_flush(fd);
 
     auto index = 0;
@@ -150,14 +159,18 @@ int main(int argc, char **argv)
         imshow("tracking", frame);
 
         auto bbox_center_x = (bbox.x + bbox.width/2);
-        auto ratio = bbox_center_x / mainWidth;
+        auto bbox_center_y = (bbox.y + bbox.height/2);
+        auto ratio_x = bbox_center_x / mainWidth;
+        auto ratio_y = bbox_center_y / mainHeight;
 
-        uint8_t translation = map_to_translation(ratio);
-        uint8_t rotation = map_to_rotation(ratio);
+        uint8_t translation = map_to_translation(ratio_x);
+        uint8_t rotation_x = map_to_rotation_x(ratio_x);
+        uint8_t rotation_y = map_to_rotation_y(ratio_y);
 
-        std::cout << (int) translation << " " << (int) rotation << std::endl;
-        serialport_writebyte(fd, translation);
-        serialport_writebyte(fd, rotation);
+        std::cout << (int) translation << " " << (int) rotation_x << " " << (int) rotation_y << std::endl;
+        //serialport_writebyte(fd, translation);
+        serialport_writebyte(fd, rotation_x);
+        serialport_writebyte(fd, rotation_y);
 
         eye.update();
         imshow("final", eye.frame);

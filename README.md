@@ -11,5 +11,5 @@ brew install libusb opencv
 build and run with
 
 ```
-clang++ `pkg-config --cflags --libs libusb-1.0 opencv4` -std=c++17 ps3eye.cpp test.cpp -o track-test && ./track-test
+clang++ `pkg-config --cflags --libs libusb-1.0 opencv4` -std=c++17 ps3eye.cpp test.cpp -o track-test && ./track-test <path to serial port e.g. /dev/cu.usbmodel14201>
 ```
