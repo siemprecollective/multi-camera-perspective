@@ -101,7 +101,7 @@ static const uint8_t ov534_reg_initdata[][2] = {
 	{ 0x95, 0x10 },
 	{ 0xE2, 0x00 },
 	{ 0xE7, 0x3E },
-	
+
 	{ 0x96, 0x00 },
 	{ 0x97, 0x20 },
 	{ 0x97, 0x20 },
@@ -146,7 +146,7 @@ static const uint8_t ov534_reg_initdata[][2] = {
 	{ 0x31, 0xF9 },
 	{ 0x25, 0x42 },
 	{ 0x21, 0xF0 },
-	{ 0xE5, 0x04 }	
+	{ 0xE5, 0x04 }
 };
 
 static const uint8_t ov772x_reg_initdata[][2] = {
@@ -159,7 +159,7 @@ static const uint8_t ov772x_reg_initdata[][2] = {
 	{ 0x11, 0x01 },
 	{ 0x14, 0x40 },
 	{ 0x15, 0x00 },
-	{ 0x63, 0xAA },		// AWB	
+	{ 0x63, 0xAA },		// AWB
 	{ 0x64, 0x87 },
 	{ 0x66, 0x00 },
 	{ 0x67, 0x02 },
@@ -217,7 +217,7 @@ static const uint8_t bridge_start_qvga[][2] = {
 	{0x1c, 0x00},
 	{0x1d, 0x00},
 	{0x1d, 0x02},
-	{0x1d, 0x00},	
+	{0x1d, 0x00},
 	{0x1d, 0x00},	/* frame size = 0x004B00 * 4 = 76800 bytes (320 * 240 @ 8bpp) */
 	{0x1d, 0x4b},	/* frame size */
 	{0x1d, 0x00},	/* frame size */
@@ -278,8 +278,8 @@ static uint8_t find_ep(struct libusb_device *device)
 
     for (i = 0; i < altsetting->bNumEndpoints; i++) {
         ep = &altsetting->endpoint[i];
-        if ((ep->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK 
-            && ep->wMaxPacketSize != 0) 
+        if ((ep->bmAttributes & LIBUSB_TRANSFER_TYPE_MASK) == LIBUSB_TRANSFER_TYPE_BULK
+            && ep->wMaxPacketSize != 0)
         {
             ep_addr = ep->bEndpointAddress;
             break;
@@ -308,7 +308,7 @@ class USBMgr
     static std::shared_ptr<USBMgr>  sInstance;
     static int                      sTotalDevices;
 
- private:   
+ private:
     libusb_context*					usb_context;
 	std::thread						update_thread;
 	std::atomic_bool				exit_signaled;
@@ -325,7 +325,7 @@ class USBMgr
 std::shared_ptr<USBMgr> USBMgr::sInstance;
 int                     USBMgr::sTotalDevices = 0;
 
-USBMgr::USBMgr() 
+USBMgr::USBMgr()
 {
 	exit_signaled = false;
 	active_camera_count = 0;
@@ -370,7 +370,7 @@ void USBMgr::stopTransferThread()
 	update_thread.join();
 	// Reset the exit signal flag.
 	// If we don't and we call startTransferThread() again, transferThreadFunc will exit immediately.
-	exit_signaled = false;    
+	exit_signaled = false;
 }
 
 void USBMgr::transferThreadFunc()
@@ -402,7 +402,7 @@ int USBMgr::listDevices( std::vector<PS3EYECam::PS3EYERef>& list )
 	}
 
     cnt = 0;
-    while ((dev = devs[i++]) != NULL) 
+    while ((dev = devs[i++]) != NULL)
 	{
 		struct libusb_device_descriptor desc;
 		libusb_get_device_descriptor(dev, &desc);
@@ -459,7 +459,7 @@ public:
 		// Instead, if the buffer is full, we simply return the current frame pointer, causing the producer to overwrite the previous frame.
 		// This allows performance to degrade gracefully: if the consumer is not fast enough (< Camera FPS), it will miss frames, but if it is fast enough (>= Camera FPS), it will see everything.
 		//
-		// Note that because the the producer is writing directly to the ring buffer, we can only ever be a maximum of num_frames-1 ahead of the consumer, 
+		// Note that because the the producer is writing directly to the ring buffer, we can only ever be a maximum of num_frames-1 ahead of the consumer,
 		// otherwise the producer could overwrite the frame the consumer is currently reading (in case of a slow consumer)
 		if (available >= num_frames - 1)
 		{
@@ -481,7 +481,7 @@ public:
 	}
 
 	void Dequeue(uint8_t* new_frame, int frame_width, int frame_height, PS3EYECam::EOutputFormat outputFormat)
-	{		
+	{
 		std::unique_lock<std::mutex> lock(mutex);
 
 		// If there is no data in the buffer, wait until data becomes available
@@ -498,7 +498,7 @@ public:
 				 outputFormat == PS3EYECam::EOutputFormat::RGB)
 		{
 			DebayerRGB(frame_width, frame_height, source, new_frame, outputFormat == PS3EYECam::EOutputFormat::BGR);
-		}		
+		}
 		else if (outputFormat == PS3EYECam::EOutputFormat::Gray)
 		{
 			DebayerGray(frame_width, frame_height, source, new_frame);
@@ -507,7 +507,7 @@ public:
 		tail = (tail + 1) % num_frames;
 		available--;
 	}
-	
+
 	void DebayerGray(int frame_width, int frame_height, const uint8_t* inBayer, uint8_t* outBuffer)
 	{
 		// PSMove output is in the following Bayer format (GRBG):
@@ -518,20 +518,20 @@ public:
 		// B G B G B G
 		//
 		// This is the normal Bayer pattern shifted left one place.
-		
+
 		int				source_stride	= frame_width;
 		const uint8_t*	source_row		= inBayer;						// Start at first bayer pixel
 		int				dest_stride		= frame_width;
 		uint8_t*		dest_row		= outBuffer + dest_stride + 1; 	// We start outputting at the second pixel of the second row's G component
 		uint32_t R,G,B;
-		
+
 		// Fill rows 1 to height-1 of the destination buffer. First and last row are filled separately (they are copied from the second row and second-to-last rows respectively)
 		for (int y = 0; y < frame_height-1; source_row += source_stride, dest_row += dest_stride, ++y)
 		{
 			const uint8_t* source		= source_row;
 			const uint8_t* source_end	= source + (source_stride-2);								// -2 to deal with the fact that we're starting at the second pixel of the row and should end at the second-to-last pixel of the row (first and last are filled separately)
 			uint8_t* dest				= dest_row;
-			
+
 			// Row starting with Green
 			if (y % 2 == 0)
 			{
@@ -540,10 +540,10 @@ public:
 				G = source[source_stride + 1];
 				R = (source[1] + source[source_stride * 2 + 1] + 1) >> 1;
 				*dest = (uint8_t)((R*77 + G*151 + B*28)>>8);
-				
+
 				source++;
 				dest++;
-				
+
 				// Fill remaining pixel
 				for (; source <= source_end - 2; source += 2, dest += 2)
 				{
@@ -578,7 +578,7 @@ public:
 					dest[1] = (uint8_t)((R*77 + G*151 + B*28)>>8);
 				}
 			}
-			
+
 			if (source < source_end)
 			{
 				B = source[source_stride + 1];
@@ -589,17 +589,17 @@ public:
 				source++;
 				dest++;
 			}
-			
+
 			// Fill first pixel of row (copy second pixel)
 			uint8_t* first_pixel	= dest_row-1;
 			first_pixel[0]			= dest_row[0];
-			
+
 			// Fill last pixel of row (copy second-to-last pixel). Note: dest row starts at the *second* pixel of the row, so dest_row + (width-2) * num_output_channels puts us at the last pixel of the row
 			uint8_t* last_pixel				= dest_row + (frame_width - 2);
 			uint8_t* second_to_last_pixel	= last_pixel - 1;
 			last_pixel[0]					= second_to_last_pixel[0];
 		}
-		
+
 		// Fill first & last row
 		for (int i = 0; i < dest_stride; i++)
 		{
@@ -631,7 +631,7 @@ public:
 		{
 			const uint8_t* source		= source_row;
 			const uint8_t* source_end	= source + (source_stride-2);								// -2 to deal with the fact that we're starting at the second pixel of the row and should end at the second-to-last pixel of the row (first and last are filled separately)
-			uint8_t* dest				= dest_row;		
+			uint8_t* dest				= dest_row;
 
 			// Row starting with Green
 			if (y % 2 == 0)
@@ -639,7 +639,7 @@ public:
 				// Fill first pixel (green)
 				dest[-1*swap_br]	= (source[source_stride] + source[source_stride + 2] + 1) >> 1;
 				dest[0]				= source[source_stride + 1];
-				dest[1*swap_br]		= (source[1] + source[source_stride * 2 + 1] + 1) >> 1;		
+				dest[1*swap_br]		= (source[1] + source[source_stride * 2 + 1] + 1) >> 1;
 
 				source++;
 				dest += num_output_channels;
@@ -651,11 +651,11 @@ public:
 					uint8_t* cur_pixel	= dest;
 					cur_pixel[-1*swap_br]	= source[source_stride + 1];
 					cur_pixel[0]			= (source[1] + source[source_stride] + source[source_stride + 2] + source[source_stride * 2 + 1] + 2) >> 2;
-					cur_pixel[1*swap_br]	= (source[0] + source[2] + source[source_stride * 2] + source[source_stride * 2 + 2] + 2) >> 2;				
+					cur_pixel[1*swap_br]	= (source[0] + source[2] + source[source_stride * 2] + source[source_stride * 2 + 2] + 2) >> 2;
 
 					//  Green pixel
 					uint8_t* next_pixel		= cur_pixel+num_output_channels;
-					next_pixel[-1*swap_br]	= (source[source_stride + 1] + source[source_stride + 3] + 1) >> 1;					
+					next_pixel[-1*swap_br]	= (source[source_stride + 1] + source[source_stride + 3] + 1) >> 1;
 					next_pixel[0]			= source[source_stride + 2];
 					next_pixel[1*swap_br]	= (source[2] + source[source_stride * 2 + 2] + 1) >> 1;
 				}
@@ -681,8 +681,8 @@ public:
 			if (source < source_end)
 			{
 				dest[-1*swap_br]	= source[source_stride + 1];
-				dest[0]				= (source[1] + source[source_stride] + source[source_stride + 2] + source[source_stride * 2 + 1] + 2) >> 2;			
-				dest[1*swap_br]		= (source[0] + source[2] + source[source_stride * 2] + source[source_stride * 2 + 2] + 2) >> 2;;			
+				dest[0]				= (source[1] + source[source_stride] + source[source_stride + 2] + source[source_stride * 2 + 1] + 2) >> 2;
+				dest[1*swap_br]		= (source[0] + source[2] + source[source_stride * 2] + source[source_stride * 2 + 2] + 2) >> 2;;
 
 				source++;
 				dest += num_output_channels;
@@ -693,11 +693,11 @@ public:
 			first_pixel[-1*swap_br]		= dest_row[-1*swap_br];
 			first_pixel[0]				= dest_row[0];
 			first_pixel[1*swap_br]		= dest_row[1*swap_br];
-		
+
  			// Fill last pixel of row (copy second-to-last pixel). Note: dest row starts at the *second* pixel of the row, so dest_row + (width-2) * num_output_channels puts us at the last pixel of the row
 			uint8_t* last_pixel				= dest_row + (frame_width - 2)*num_output_channels;
 			uint8_t* second_to_last_pixel	= last_pixel - num_output_channels;
-			
+
 			last_pixel[-1*swap_br]			= second_to_last_pixel[-1*swap_br];
 			last_pixel[0]					= second_to_last_pixel[0];
 			last_pixel[1*swap_br]			= second_to_last_pixel[1*swap_br];
@@ -729,11 +729,11 @@ private:
 class URBDesc
 {
 public:
-	URBDesc() : 
+	URBDesc() :
 		num_active_transfers			(0),
-		last_packet_type		(DISCARD_PACKET), 
-		last_pts				(0), 
-		last_fid				(0), 
+		last_packet_type		(DISCARD_PACKET),
+		last_pts				(0),
+		last_fid				(0),
 		transfer_buffer			(NULL),
 		cur_frame_start			(NULL),
 		cur_frame_data_len		(0),
@@ -751,7 +751,7 @@ public:
 	bool start_transfers(libusb_device_handle *handle, uint32_t curr_frame_size)
 	{
 		// Initialize the frame queue
-        frame_size = curr_frame_size;
+    frame_size = curr_frame_size;
 		frame_queue = new FrameQueue(frame_size);
 
 		// Initialize the current frame pointer to the start of the buffer; it will be updated as frames are completed and pushed onto the frame queue
@@ -774,7 +774,7 @@ public:
 			libusb_fill_bulk_transfer(xfr[index], handle, bulk_endpoint, transfer_buffer + index * TRANSFER_SIZE, TRANSFER_SIZE, transfer_completed_callback, reinterpret_cast<void*>(this), 0);
 
 			res |= libusb_submit_transfer(xfr[index]);
-			
+
 			num_active_transfers++;
 		}
 
@@ -819,10 +819,10 @@ public:
 
 	void frame_add(enum gspca_packet_type packet_type, const uint8_t *data, int len)
 	{
-	    if (packet_type == FIRST_PACKET) 
+	    if (packet_type == FIRST_PACKET)
 	    {
             cur_frame_data_len = 0;
-	    } 
+	    }
 	    else
 	    {
             switch(last_packet_type)  // ignore warning.
@@ -855,7 +855,7 @@ public:
 
 	    last_packet_type = packet_type;
 
-	    if (packet_type == LAST_PACKET) {        
+	    if (packet_type == LAST_PACKET) {
 			cur_frame_data_len = 0;
 			cur_frame_start = frame_queue->Enqueue();
 	        //debug("frame completed %d\n", frame_complete_ind);
@@ -910,7 +910,7 @@ public:
 	            last_fid = this_fid;
 	            frame_add(FIRST_PACKET, data + 12, len - 12);
 	        } /* If this packet is marked as EOF, end the frame */
-	        else if (data[1] & UVC_STREAM_EOF) 
+	        else if (data[1] & UVC_STREAM_EOF)
 	        {
 	            last_pts = 0;
                 if(cur_frame_data_len + len - 12 != frame_size)
@@ -957,13 +957,13 @@ static void LIBUSB_CALL transfer_completed_callback(struct libusb_transfer *xfr)
     URBDesc *urb = reinterpret_cast<URBDesc*>(xfr->user_data);
     enum libusb_transfer_status status = xfr->status;
 
-    if (status != LIBUSB_TRANSFER_COMPLETED) 
+    if (status != LIBUSB_TRANSFER_COMPLETED)
     {
         debug("transfer status %d\n", status);
 
         libusb_free_transfer(xfr);
-		urb->transfer_canceled();
-        
+		    urb->transfer_canceled();
+
         if(status != LIBUSB_TRANSFER_CANCELLED)
         {
             urb->close_transfers();
@@ -1034,7 +1034,7 @@ PS3EYECam::~PS3EYECam()
 
 void PS3EYECam::release()
 {
-	if(handle_ != NULL) 
+	if(handle_ != NULL)
 		close_usb();
 	if(usb_buf) free(usb_buf);
 }
@@ -1044,7 +1044,7 @@ bool PS3EYECam::init(uint32_t width, uint32_t height, uint16_t desiredFrameRate,
 	uint16_t sensor_id;
 
 	// open usb device so we can setup and go
-	if(handle_ == NULL) 
+	if(handle_ == NULL)
 	{
 		if( !open_usb() )
 		{
@@ -1086,7 +1086,7 @@ bool PS3EYECam::init(uint32_t width, uint32_t height, uint16_t desiredFrameRate,
 	sccb_reg_write(0x12, 0x80);
 #ifdef _MSC_VER
 	Sleep(10);
-#else    
+#else
     nanosleep((const struct timespec[]){{0, 10000000}}, NULL);
 #endif
 
@@ -1110,7 +1110,7 @@ bool PS3EYECam::init(uint32_t width, uint32_t height, uint16_t desiredFrameRate,
 void PS3EYECam::start()
 {
     if(is_streaming) return;
-    
+
 	if (frame_width == 320) {	/* 320x240 */
 		reg_w_array(bridge_start_qvga, ARRAY_SIZE(bridge_start_qvga));
 		sccb_w_array(sensor_start_qvga, ARRAY_SIZE(sensor_start_qvga));
@@ -1149,7 +1149,7 @@ void PS3EYECam::stop()
 	/* stop streaming data */
 	ov534_reg_write(0xe0, 0x09);
 	ov534_set_led(0);
-    
+
 	// close urb
 	urb->close_transfers();
 
@@ -1184,7 +1184,7 @@ bool PS3EYECam::getUSBPortPath(char *out_identifier, size_t max_identifier_lengt
 
                 snprintf(port_string, sizeof(port_string), (port_index == 0) ? "_p%d" : ".%d", port_number);
                 port_string[sizeof(port_string) - 1] = '0';
-                
+
                 if (strlen(out_identifier)+strlen(port_string)+1 <= max_identifier_length)
                 {
                     std::strcat(out_identifier, port_string);
@@ -1269,7 +1269,7 @@ void PS3EYECam::ov534_set_led(int status)
 		data &= ~0x80;
 
 	ov534_reg_write(0x23, data);
-	
+
 	if (!status) {
 		data = ov534_reg_read(0x21);
 		data &= ~0x80;
@@ -1341,7 +1341,7 @@ uint16_t PS3EYECam::ov534_set_frame_rate(uint16_t frame_rate, bool dry_run)
                      break;
              r++;
      }
- 
+
      if (!dry_run) {
      sccb_reg_write(0x11, r->r11);
      sccb_reg_write(0x0d, r->r0d);
@@ -1360,8 +1360,8 @@ void PS3EYECam::ov534_reg_write(uint16_t reg, uint8_t val)
 	usb_buf[0] = val;
 
   	ret = libusb_control_transfer(handle_,
-							LIBUSB_ENDPOINT_OUT | 
-							LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE, 
+							LIBUSB_ENDPOINT_OUT |
+							LIBUSB_REQUEST_TYPE_VENDOR | LIBUSB_RECIPIENT_DEVICE,
 							0x01, 0x00, reg,
 							usb_buf, 1, 500);
 	if (ret < 0) {
@@ -1374,14 +1374,14 @@ uint8_t PS3EYECam::ov534_reg_read(uint16_t reg)
 	int ret;
 
 	ret = libusb_control_transfer(handle_,
-							LIBUSB_ENDPOINT_IN|LIBUSB_REQUEST_TYPE_VENDOR|LIBUSB_RECIPIENT_DEVICE, 
+							LIBUSB_ENDPOINT_IN|LIBUSB_REQUEST_TYPE_VENDOR|LIBUSB_RECIPIENT_DEVICE,
 							0x01, 0x00, reg,
 							usb_buf, 1, 500);
 
 	//debug("reg=0x%04x, data=0x%02x", reg, usb_buf[0]);
 	if (ret < 0) {
 		debug("read failed\n");
-	
+
 	}
 	return usb_buf[0];
 }
